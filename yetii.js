@@ -1,10 +1,10 @@
 /*
 Yetii - Yet (E)Another Tab Interface Implementation
-version 1.8.0
-http://www.kminek.pl/lab/yetii/
-Copyright (c) Grzegorz Wojcik
+version 1.9.0
+https://github.com/shrglobal/yetti
+Copyright (c) Grzegorz Wojcik, Sceptre Hospitality Resources
 Code licensed under the BSD License:
-http://www.kminek.pl/bsdlicense.txt
+https://raw.githubusercontent.com/shrglobal/yetti/master/LICENSE
 */
 
 function Yetii() {
@@ -19,7 +19,6 @@ function Yetii() {
         activeclass: 'active',
         callback: null,
         leavecallback: null
-
     };
 
     this.activebackup = null;
@@ -41,16 +40,36 @@ function Yetii() {
     this.links = document.getElementById(this.defaults.id + '-nav').getElementsByTagName('a');
     this.listitems = document.getElementById(this.defaults.id + '-nav').getElementsByTagName('li');
 
+    this.applyRoles = function() {
+        document.getElementById(this.defaults.id + '-nav').setAttribute('role','tablist');
+        for (var i = 0; i < this.tabs.length; i++) {
+            this.listitems[i].setAttribute('role','tab');
+            this.tabs[i].setAttribute('role','tabpanel');
+            this.tabs[i].setAttribute('tabindex',0);
+            var z = this.listitems[i].getAttribute('id');
+            if(z&&z.length>0) this.tabs[i].setAttribute('aria-labelledby',z);
+        }
+    };
+
     this.show = function(number) {
         for (var i = 0; i < this.tabs.length; i++) {
-            this.tabs[i].style.display = ((i+1)==number) ? 'block' : 'none';
-            if ((i+1)==number) {
+            if ((i+1) === number) {
+                this.tabs[i].style.display = 'block';
+                this.tabs[i].removeAttribute('hidden');
                 this.addClass(this.links[i], this.defaults.activeclass);
                 this.addClass(this.listitems[i], this.defaults.activeclass + 'li');
+                this.links[i].setAttribute('tabindex', 0);
+                this.listitems[i].setAttribute('tabindex', 0);
+                this.listitems[i].setAttribute('aria-selected', true);
             } else {
+                this.tabs[i].style.display = 'none';
+                this.tabs[i].setAttribute('hidden', true);
                 this.removeClass(this.links[i], this.defaults.activeclass);
                 this.removeClass(this.listitems[i], this.defaults.activeclass + 'li');
-            }
+                this.links[i].setAttribute('tabindex', -1);
+                this.listitems[i].setAttribute('tabindex', -1);
+                this.listitems[i].setAttribute('aria-selected', false);
+            }   
         }
         if (this.defaults.leavecallback && (number != this.activebackup)) this.defaults.leavecallback(this.defaults.active);
         this.activebackup = number;
@@ -161,6 +180,7 @@ function Yetii() {
     this.defaults.active = (this.parseurl(this.defaults.id)) ? this.parseurl(this.defaults.id) : this.defaults.active;
     if (this.defaults.persist && this.readCookie(this.defaults.id)) this.defaults.active = this.readCookie(this.defaults.id);
     this.activebackup = this.defaults.active;
+    this.applyRoles();
     this.show(this.defaults.active);
 
     var self = this;
